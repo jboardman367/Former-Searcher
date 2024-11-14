@@ -1,0 +1,65 @@
+# single group
+1,1
+P
+# split groups
+2,2
+P-P
+# two colours
+2,2
+P
+G
+# fall to join
+2,3
+P-
+GP
+# take out the middle
+2,3
+P
+G
+P
+# fall to join not edge
+2,4
+-P-
+PGP
+# crossed
+3,4
+PG
+GP
+# double crossed
+4,6
+PGP
+GPG
+# two stacks
+2,2
+PG
+PG
+# unbreakable distance
+2,2
+PP
+PG
+# unbreakable floor
+1,1
+PP
+# unbreakable broken
+3,4
+PP
+GP
+PG
+# my search is broken
+4,7
+-PP
+-OO
+GBP
+# my search is broken #2
+4,6
+-P-
+-OP
+GBO
+# my search is broken #3
+4,5
+-OO
+GBP
+# my search is broken #4
+3,4
+--O
+GOP
