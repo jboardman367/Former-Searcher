@@ -69,7 +69,6 @@ def search_max(board: Board, visit_limit, discard_duplicate_scores=True, report_
     boards: List[Tuple[int, int, int, int, Board]] = []
     heappush(boards, (0, 0, 0, 0, do_free_moves_max(board).with_metadata(i='0')))
     visits = 0
-    fake_visits = 0
 
     start_time = time.time()
     cur_time = start_time
@@ -78,7 +77,7 @@ def search_max(board: Board, visit_limit, discard_duplicate_scores=True, report_
     prune = 9999999
     highest_depth = 0
     solutions: List[Board] = []
-    while fake_visits < visit_limit and len(boards) > 0:
+    while visits < visit_limit and len(boards) > 0:
         parent: Board
         mun: int
         _, _, mun, _, parent = heappop(boards)
@@ -86,13 +85,12 @@ def search_max(board: Board, visit_limit, discard_duplicate_scores=True, report_
             continue
 
         children = sorted([parent.gmove(group) for group in range(parent.n_groups)], key=lambda child: find_bounds(child)[1][1], reverse=True)
-        fake_visits += len(children)
         children = [do_free_moves_max(child) for child in children if -find_bounds(child)[1][1] - child.moves < prune]
 
         for child in children:
             visits += 1
             if visits % report_distance == 0:
-                print(f"{fake_visits} boards searched, t = {round(time.time() - start_time)}. Time for last {report_distance/1000}k: {round((time.time() - cur_time) * 100) / 100}. Estimated time to completion is {round((time.time() - cur_time) * (visit_limit - visits) / report_distance)}s. Best is {prune + (1 if discard_duplicate_scores else 0)}")
+                print(f"{visits} boards searched, t = {round(time.time() - start_time)}. Time for last {report_distance/1000}k: {round((time.time() - cur_time) * 100) / 100}. Estimated time to completion is {round((time.time() - cur_time) * (visit_limit - visits) / report_distance)}s. Best is {prune + (1 if discard_duplicate_scores else 0)}")
                 cur_time = time.time()
             
             if child.complete:
@@ -132,4 +130,4 @@ if __name__ == '__main__':
     with open('board.txt', 'r') as f:
         board_string = f.read(10_000)
     bd = Board(board=board_string)
-    search_min(bd, visit_limit=1e7, discard_duplicate_scores=True, report_distance=100000)
+    search_max(bd, visit_limit=25000, discard_duplicate_scores=True, report_distance=100000)
