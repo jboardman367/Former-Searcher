@@ -49,50 +49,30 @@ def do_free_moves_min(board: Board):
     # isolated groups with nothing above them
     total_visited = set()
     for c, col in enumerate(board.cols):
+        if c in total_visited:
+            continue
         # skip empty columns
         if len(col) == 0:
             continue
         # if there's nothing above the group, it will be at the top of every column it spans
         top = len(col) - 1
+        group_id = board.groups[c][top]
         color = col[top]
-        # ignore if we've already visited as part of a previous group
-        if (c, top) in total_visited:
-            continue
+        
+        group = []
+        for gc,group_col in enumerate(board.groups):
+            for r,id in enumerate(group_col):
+                if id == group_id:
+                    group.append((gc, r))
+                
         # keep track of column span
-        colmin = c
-        colmax = c
-        # walk the group
-        nodes = [(c, top)]
-        group = set()
-        topbottom_mismatch = False
-        while len(nodes) > 0:
-            _col, _row = nodes.pop()
-            group.add((_col, _row))
-            colmin = min(colmin, _col)
-            colmax = max(colmax, _col)
-            # above
-            if _row + 1 < len(board.cols[_col]):
-                if board.cols[_col][_row+1] == color:
-                    if (_col, _row+1) not in group:
-                        nodes.append((_col, _row+1))
-                else:
-                    topbottom_mismatch = True
-                    break
-            # below
-            if _row > 0 and board.cols[_col][_row-1] == color:
-                if (_col, _row-1) not in group:
-                    nodes.append((_col, _row-1))
-            # left
-            if _col > 0 and len(board.cols[_col-1]) > _row and board.cols[_col-1][_row] == color:
-                if (_col-1, _row) not in group:
-                    nodes.append((_col-1, _row))
-            # right
-            if _col + 1 < len(board.cols) and len(board.cols[_col+1]) > _row and board.cols[_col+1][_row] == color:
-                if (_col+1, _row) not in group:
-                    nodes.append((_col+1, _row))
+        colmin = min(group[i][0] for i in range(len(group)))
+        colmax = max(group[i][0] for i in range(len(group)))
+        
+        topbottom_mismatch = any(board.cols[i][-1] != color for i in range(colmin, colmax + 1))
 
         # keep track of groups visited previously
-        total_visited.update(group)
+        total_visited.update(range(colmin, colmax + 1))
         
         if topbottom_mismatch:
             continue
@@ -135,34 +115,18 @@ def do_free_moves_min(board: Board):
         # ignore if we've already visited as part of a previous group
         if (c, first) in total_visited:
             continue
+        
+        # find this full group
+        group_id = board.groups[c][first]
+        group = []
+        for gc,group_col in enumerate(board.groups):
+            for r,id in enumerate(group_col):
+                if id == group_id:
+                    group.append((gc, r))
+
         # keep track of column span
-        colmin = c
-        colmax = c
-        # walk the group
-        nodes = [(c, first)]
-        group = set()
-        while len(nodes) > 0:
-            _col, _row = nodes.pop()
-            group.add((_col, _row))
-            colmin = min(colmin, _col)
-            colmax = max(colmax, _col)
-            # above
-            if _row + 1 < len(board.cols[_col]) and board.cols[_col][_row+1] == color:
-                    if (_col, _row+1) not in group:
-                        nodes.append((_col, _row+1))
-            # below
-            if _row > 0:
-                if board.cols[_col][_row-1] == color:
-                    if (_col, _row-1) not in group:
-                        nodes.append((_col, _row-1))
-            # left
-            if _col > 0 and len(board.cols[_col-1]) > _row and board.cols[_col-1][_row] == color:
-                if (_col-1, _row) not in group:
-                    nodes.append((_col-1, _row))
-            # right
-            if _col + 1 < len(board.cols) and len(board.cols[_col+1]) > _row and board.cols[_col+1][_row] == color:
-                if (_col+1, _row) not in group:
-                    nodes.append((_col+1, _row))
+        colmin = min(group[i][0] for i in range(len(group)))
+        colmax = max(group[i][0] for i in range(len(group)))
         
         # check if group could merge
         # left or right
@@ -220,41 +184,26 @@ def do_free_moves_min(board: Board):
             # don't double up
             if cell in checked_span_of:
                 continue
-            nodes = [cell]
-            mingroup = cell[0]
-            maxgroup = cell[0]
             group_id = board.groups[cell[0]][cell[1]]
-            while len(nodes) > 0:
-                _c, _r = nodes.pop()
-                checked_span_of.add((_c, _r))
-                mingroup = min(mingroup, _c)
-                maxgroup = max(maxgroup, _c)
-                # above
-                if _r + 1 < len(board.groups[_c]) and board.groups[_c][_r+1] == group_id:
-                    if (_c, _r+1) not in checked_span_of:
-                        nodes.append((_c, _r+1))
-                # below
-                if _r > 0 and board.groups[_c][_r-1] == group_id:
-                    if (_c, _r-1) not in checked_span_of:
-                        nodes.append((_c, _r-1))
-                # left
-                if _c > 0 and len(board.groups[_c-1]) > _r and board.groups[_c-1][_r] == group_id:
-                    if (_c-1, _r) not in checked_span_of:
-                        nodes.append((_c-1, _r))
-                # right
-                if _c + 1 < len(board.groups) and len(board.groups[_c+1]) > _r and board.groups[_c+1][_r] == group_id:
-                    if (_c+1, _r) not in checked_span_of:
-                        nodes.append((_c+1, _r))
+            group = []
+            for gc,group_col in enumerate(board.groups):
+                for r,id in enumerate(group_col):
+                    if id == group_id:
+                        group.append((gc, r))
+            
+            mingroup = min(group[i][0] for i in range(len(group)))
+            maxgroup = max(group[i][0] for i in range(len(group)))
+
             if mingroup < colmin and maxgroup > colmax:
                 outspanned = True
+                break
 
         if outspanned:
             continue
 
 
         # we've eliminated all columns that either move something or could merge, so make the move
-        return do_free_moves_min(board.move(c, first).with_metadata(free_move='true'))
-        
+        return do_free_moves_min(board.move(c, first).with_metadata(free_move='true')) 
             
     # is removing a colour always optimal? It definitely is with 2 colours remaining, not sure otherwise.
     return board
